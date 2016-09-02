@@ -2,11 +2,11 @@
 
 ## Overview
 
-***Splunk HTTP Event Collector*** input plugin.
+***Splunk HTTP Event Collector*** output plugin.
 
-Output JSON metrics from any datasource to the Splunk HTTP Event Collector (Splunk HEC).
+Output data from any Fluent input plugin to the Splunk HTTP Event Collector (Splunk HEC).
 
-The Splunk HEC is running on a Heavy Forwarder. More info about the Splunk HEC architecture in a distributed environment can be found in the Splunk [Docs](http://dev.splunk.com/view/event-collector/SP-CAAAE73)
+The Splunk HEC is running on a Heavy Forwarder or single instance. More info about the Splunk HEC architecture in a distributed environment can be found in the Splunk [Docs](http://dev.splunk.com/view/event-collector/SP-CAAAE73)
 
 ## Configuration
 
@@ -22,11 +22,11 @@ The Splunk HEC is running on a Heavy Forwarder. More info about the Splunk HEC a
 
 ## config: host
 
-The host where the Splunk HEC is running.
+The host where the Splunk HEC is listening (Heavy Forwarder or Single Instance).
 
 ## config: protocol
 
-The protocol on which the Splunk HEC is listening.
+The protocol on which the Splunk HEC is listening. If you are going to use HTTPS make sure you use a signed certificate. Weak certificates are a work in progress.
 
 ## config: port
 
@@ -44,3 +44,8 @@ Put the token here.
 3. Commit your changes (`git commit -am 'Added some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+## TODO
+
+* Add support for weak certificates
+* Add support for custom index, source and sourcetype fields 
