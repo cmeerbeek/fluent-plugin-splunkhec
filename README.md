@@ -48,4 +48,8 @@ Put the token here.
 ## TODO
 
 * Add support for weak certificates
-* Add support for custom index, source and sourcetype fields 
+* Add support for custom index, source and sourcetype fields
+ 
+## Copyright
+
+Copyright (c) 2016 Coen Meerbeek. See [LICENSE](LICENSE) for details.

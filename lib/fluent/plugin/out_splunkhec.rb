@@ -1,5 +1,5 @@
 require 'fluent/output'
-require 'rest-client'
+require 'net/http'
 require 'json'
 
 module Fluent
@@ -59,12 +59,28 @@ module Fluent
           body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + tag + '"}'
           log.debug "splunkhec: " + body + "\n"
           
-          # Create POST request
-          response = RestClient.post(@splunk_url, body, {:Authorization => 'Splunk ' + @token})
-          log.debug "\nsplunkhec: response body is " + response.body.to_json + "\n"
+          log.debug "splunkhec: token is #{@token}\n"
+          uri = URI('http://splunk.bluefactory.nl:8088/services/collector/event')
+          
+          # Create client
+          http = Net::HTTP.new(uri.host, uri.port)
+          
+          # Create Request
+          req =  Net::HTTP::Post.new(uri)
+          # Add headers
+          req.add_field "Authorization", "Splunk #{@token}"
+          # Add headers
+          req.add_field "Content-Type", "application/json; charset=utf-8"
+          # Set body
+          req.body = body
+
+          # Fetch Request
+          res = http.request(req)
+          log.debug "splunkhec: response HTTP Status Code is #{res.code}"
         }
-      rescue => e
-        log.fatal e.response
+      rescue => err
+        log.fatal("splunkhec: caught exception; exiting")
+        log.fatal(err)
       end
     end
   end
