@@ -60,7 +60,7 @@ module Fluent
           log.debug "splunkhec: " + body + "\n"
           
           log.debug "splunkhec: token is #{@token}\n"
-          uri = URI('http://splunk.bluefactory.nl:8088/services/collector/event')
+          uri = URI(@splunk_uri)
           
           # Create client
           http = Net::HTTP.new(uri.host, uri.port)
