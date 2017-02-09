@@ -14,9 +14,13 @@ The Splunk HEC is running on a Heavy Forwarder or single instance. More info abo
 <match splunkhec>
     @type splunkhec
     host splunk.bluefactory.nl
-    protocol https
-    port 8080
+    protocol https #optional
+    port 8080 #optional
     token BAB747F3-744E-41BA
+    index main #optional
+    event_host fluentdhost #optional
+    source fluentd #optional
+    sourcetype data:type #optional
 </source>
 ```
 
@@ -37,6 +41,22 @@ The port on which the Splunk HEC is listening.
 Every Splunk HEC requires a token to recieve data. You must configure this insite Splunk [Splunk HEC docs](http://docs.splunk.com/Documentation/Splunk/latest/Data/UsetheHTTPEventCollector).
 Put the token here.
 
+## config: index
+
+The index on the Splunk side to store the data in. Please be aware that the Splunk HTTP Event Collector you've created has the permissions to write to this index. If you don't specify this the plug-in will use "main".
+
+## config: event_host
+
+Specify the host-field for the event data in Splunk. If you don't specify this the plug-in will try to read the hostname running FluentD.
+
+## config: source
+
+Specify the source-field for the event data in Splunk. If you don't specify this the plug-in will use "fluentd".
+
+## config: sourcetype
+
+Specify the sourcetype-field for the event data in Splunk. If you don't specify this the plug-in will use the tag from the FluentD input plug-in.
+
 ## Contributing
 
 1. Fork it
@@ -47,9 +67,8 @@ Put the token here.
 
 ## TODO
 
-* Add support for weak certificates
-* Add support for custom index, source and sourcetype fields
+* Add support for SSL verification.
  
 ## Copyright
 
-Copyright (c) 2016 Coen Meerbeek. See [LICENSE](LICENSE) for details.
+Copyright (c) 2017 Coen Meerbeek. See [LICENSE](LICENSE) for details.

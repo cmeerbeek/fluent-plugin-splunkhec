@@ -6,25 +6,49 @@ module Fluent
   class SplunkHECOutput < BufferedOutput
     Fluent::Plugin.register_output('splunkhec', self)
 
-    # Primary Splunk configuration parameters
+    # Primary Splunk HEC configuration parameters
     config_param :host,     :string, :default => 'localhost', :required => true
-    config_param :protocol, :string, :default => 'https'
-    config_param :port,     :string, :default => '8088'
+    config_param :protocol, :string, :default => 'http', :required => true
+    config_param :port,     :string, :default => '8088', :required => true
     config_param :token,    :string, :default => nil, :required => true
+
+    # Splunk event parameters
+    config_param :index,      :string, :default => "main"
+    config_param :event_host, :string, :default => nil
+    config_param :source,     :string, :default => "fluentd"
+    config_param :sourcetype, :string, :default => nil
 
     # This method is called before starting.
     # Here we construct the Splunk HEC URL to POST data to
     # If the configuration is invalid, raise Fluent::ConfigError.
     def configure(conf)
-      super 
+      super
 
-      @splunk_url = conf['protocol'] + '://' + conf['host'] + ':' + conf['port'] + '/services/collector/event'
+      @protocol = conf['protocol']
+
+      @splunk_url = @protocol + '://' + conf['host'] + ':' + conf['port'] + '/services/collector/event'
       log.debug 'splunkhec: sent data to ' + @splunk_url
       if conf['token'] != nil
         @token = conf['token']
       else
         raise 'splunkhec: token is empty, please provide a token for this plugin to work'
       end
+
+      if conf['event_host'] == nil
+        @event_host = `hostname`
+        @event_host = @event_host.delete!("\n")
+      else
+        @event_host = conf['event_host']
+      end
+
+      if conf['sourcetype'] == nil
+        @event_sourcetype = 'tag'
+      else
+        @event_sourcetype = conf['sourcetype']
+      end
+      
+      @event_index = @index
+      @event_source = @source
     end
 
     def start
@@ -55,12 +79,15 @@ module Fluent
             event = record
           end
 
+          if @event_sourcetype == 'tag'
+            @event_sourcetype = tag
+          end
+
           # Build body for the POST request
-          body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + tag + '"}'
+          body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
           log.debug "splunkhec: " + body + "\n"
           
-          log.debug "splunkhec: token is #{@token}\n"
-          uri = URI(@splunk_uri)
+          uri = URI(@splunk_url)
           
           # Create client
           http = Net::HTTP.new(uri.host, uri.port)
@@ -73,10 +100,18 @@ module Fluent
           req.add_field "Content-Type", "application/json; charset=utf-8"
           # Set body
           req.body = body
+          # Handle SSL
+          if @protocol == 'https'
+            http.use_ssl = true
+            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          end
 
           # Fetch Request
           res = http.request(req)
           log.debug "splunkhec: response HTTP Status Code is #{res.code}"
+          if res.code.to_i != 200
+            log.debug "splunkhec: response body is #{res.body}"
+          end
         }
       rescue => err
         log.fatal("splunkhec: caught exception; exiting")
