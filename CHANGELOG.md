@@ -1,3 +1,7 @@
+## 1.0.1
+
+Fixed config parameters used in Splunk URI.
+
 ## 1.0.0
 
 Added all Splunk HTTP Event Collector field options.

@@ -24,9 +24,7 @@ module Fluent
     def configure(conf)
       super
 
-      @protocol = conf['protocol']
-
-      @splunk_url = @protocol + '://' + conf['host'] + ':' + conf['port'] + '/services/collector/event'
+      @splunk_url = @protocol + '://' + @host + ':' + @port + '/services/collector/event'
       log.debug 'splunkhec: sent data to ' + @splunk_url
       if conf['token'] != nil
         @token = conf['token']
