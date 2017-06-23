@@ -13,7 +13,7 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     token BAB747F3-744E-41BA
   ]
 
-  def create_driver_ga(conf = CONFIG_SPLUNKHEC)
+  def create_driver_splunkhec(conf = CONFIG_SPLUNKHEC)
     Fluent::Test::InputTestDriver.new(Fluent::SplunkHECOutput).configure(conf)
   end
 

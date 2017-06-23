@@ -7,10 +7,10 @@ module Fluent
     Fluent::Plugin.register_output('splunkhec', self)
 
     # Primary Splunk HEC configuration parameters
-    config_param :host,     :string, :default => 'localhost', :required => true
-    config_param :protocol, :string, :default => 'http', :required => true
-    config_param :port,     :string, :default => '8088', :required => true
-    config_param :token,    :string, :default => nil, :required => true
+    config_param :host,     :string, :default => 'localhost'
+    config_param :protocol, :string, :default => 'http'
+    config_param :port,     :string, :default => '8088'
+    config_param :token,    :string, :default => nil
 
     # Splunk event parameters
     config_param :index,      :string, :default => "main"

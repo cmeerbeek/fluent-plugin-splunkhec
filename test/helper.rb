@@ -24,7 +24,7 @@ unless ENV.has_key?("VERBOSE")
   $log = nulllogger
 end
 
-require "fluent/plugin/in_splunkhec"
+require "fluent/plugin/out_splunkhec"
 
 class Test::Unit::TestCase
 end
