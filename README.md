@@ -21,6 +21,7 @@ The Splunk HEC is running on a Heavy Forwarder or single instance. More info abo
     event_host fluentdhost #optional
     source fluentd #optional
     sourcetype data:type #optional
+    usejson true #optional defaults to true
 </source>
 ```
 
@@ -56,6 +57,10 @@ Specify the source-field for the event data in Splunk. If you don't specify this
 ## config: sourcetype
 
 Specify the sourcetype-field for the event data in Splunk. If you don't specify this the plug-in will use the tag from the FluentD input plug-in.
+
+## config: usejson
+
+Specify the event type as JSON (true|default) or raw (false) for sending Log4J messages so Splunk so it can parse the time field it self based on the format 'time' regex match found in the source, uses millisecond precision.
 
 ## Contributing
 
