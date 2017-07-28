@@ -21,6 +21,7 @@ The Splunk HEC is running on a Heavy Forwarder or single instance. More info abo
     event_host fluentdhost #optional
     source fluentd #optional
     sourcetype data:type #optional
+    send_event_as_json true #optional
 </source>
 ```
 
@@ -56,6 +57,10 @@ Specify the source-field for the event data in Splunk. If you don't specify this
 ## config: sourcetype
 
 Specify the sourcetype-field for the event data in Splunk. If you don't specify this the plug-in will use the tag from the FluentD input plug-in.
+
+## config: send_event_as_json
+
+Specify if an event should be sent as json rather than as a string. Can be 'true' or 'false'. If you don't specify then this will be 'false'.
 
 ## Contributing
 

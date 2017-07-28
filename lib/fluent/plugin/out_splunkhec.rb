@@ -17,6 +17,7 @@ module Fluent
     config_param :event_host, :string, :default => nil
     config_param :source,     :string, :default => "fluentd"
     config_param :sourcetype, :string, :default => nil
+    config_param :send_event_as_json, :string, :default => "false"
 
     # This method is called before starting.
     # Here we construct the Splunk HEC URL to POST data to
@@ -44,7 +45,13 @@ module Fluent
       else
         @event_sourcetype = conf['sourcetype']
       end
-      
+
+      if conf['send_event_as_json'] == 'true'
+        @event_send_as_json = true
+      else
+        @event_send_as_json = false
+      end
+
       @event_index = @index
       @event_source = @source
     end
@@ -72,7 +79,11 @@ module Fluent
           when Fixnum
             event = record.to_s
           when Hash
-            event = record.to_json.gsub("\"", %q(\\\"))
+            if @event_send_as_json
+              event = record.to_json
+            else
+              event = record.to_json.gsub("\"", %q(\\\"))
+            end
           else
             event = record
           end
@@ -82,7 +93,11 @@ module Fluent
           end
 
           # Build body for the POST request
-          body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
+          if @event_send_as_json
+            body = '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
+          else
+            body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
+          end
           log.debug "splunkhec: " + body + "\n"
           
           uri = URI(@splunk_url)
