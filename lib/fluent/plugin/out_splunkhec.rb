@@ -86,8 +86,8 @@ module Fluent
           if @usejson == 'true'
             body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
           else
-            event = record["time"] + record["message"]
-            body = '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event.to_s + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
+            event = record["time"]+ " " + record["message"].to_json.gsub(/^"|"$/,"")
+            body = '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
           end
           log.debug "splunkhec: " + body + "\n"
           
