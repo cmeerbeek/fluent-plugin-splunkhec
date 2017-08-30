@@ -90,7 +90,7 @@ module Fluent
           end
 
           if @event_sourcetype == 'tag'
-            @event_sourcetype = tag
+            event_sourcetype = tag
           end
 
           # Build body for the POST request
@@ -98,9 +98,9 @@ module Fluent
             event = record["time"]+ " " + record["message"].to_json.gsub(/^"|"$/,"")
             body = '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
           elsif @event_send_as_json
-            body = '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
+            body = '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
           else
-            body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
+            body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
           end
           log.debug "splunkhec: " + body + "\n"
           
