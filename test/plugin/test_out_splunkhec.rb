@@ -52,6 +52,7 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     assert_equal 'tag', d.instance.sourcetype
     assert_equal false, d.instance.send_event_as_json
     assert_equal true, d.instance.usejson
+    assert_equal false, d.instance.send_batched_events
     assert_equal 'some_token', d.instance.token
   end
 
@@ -138,6 +139,24 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     d = create_driver_splunkhec(CONFIG + %[send_event_as_json true])
     d.run do
       d.emit(record)
+    end
+
+    assert_requested(splunk_request)
+  end
+
+  def test_should_batch_post_all_events_in_chunk_when_configured
+    record1 = {'message' => 'data'}
+    record2 = {'message' => 'more data'}
+
+    splunk_request = stub_request(:post, SPLUNK_URL).with(body: /\"event\" :#{record1.to_json}.*\"event\" :#{record2.to_json}/m)
+
+    d = create_driver_splunkhec(CONFIG + %[
+      send_event_as_json true
+      send_batched_events true])
+
+    d.run do
+      d.emit(record1)
+      d.emit(record2)
     end
 
     assert_requested(splunk_request)
