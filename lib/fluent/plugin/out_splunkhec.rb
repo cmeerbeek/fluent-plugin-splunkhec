@@ -10,51 +10,23 @@ module Fluent
     config_param :host,     :string, :default => 'localhost'
     config_param :protocol, :string, :default => 'http'
     config_param :port,     :string, :default => '8088'
-    config_param :token,    :string, :default => nil
+    config_param :token,    :string
 
     # Splunk event parameters
-    config_param :index,      :string, :default => "main"
-    config_param :event_host, :string, :default => nil
-    config_param :source,     :string, :default => "fluentd"
-    config_param :sourcetype, :string, :default => nil
-    config_param :send_event_as_json, :string, :default => "false"
-    config_param :usejson,    :string, :default => "true"
+    config_param :index,      :string, :default => 'main'
+    config_param :event_host, :string, :default => `hostname`.delete!("\n")
+    config_param :source,     :string, :default => 'fluentd'
+    config_param :sourcetype, :string, :default => 'tag'
+    config_param :send_event_as_json, :bool, :default => false
+    config_param :usejson,    :bool, :default => true
 
     # This method is called before starting.
     # Here we construct the Splunk HEC URL to POST data to
     # If the configuration is invalid, raise Fluent::ConfigError.
     def configure(conf)
       super
-
       @splunk_url = @protocol + '://' + @host + ':' + @port + '/services/collector/event'
       log.debug 'splunkhec: sent data to ' + @splunk_url
-      if conf['token'] != nil
-        @token = conf['token']
-      else
-        raise 'splunkhec: token is empty, please provide a token for this plugin to work'
-      end
-
-      if conf['event_host'] == nil
-        @event_host = `hostname`
-        @event_host = @event_host.delete!("\n")
-      else
-        @event_host = conf['event_host']
-      end
-
-      if conf['sourcetype'] == nil
-        @event_sourcetype = 'tag'
-      else
-        @event_sourcetype = conf['sourcetype']
-      end
-
-      if conf['send_event_as_json'] == 'true'
-        @event_send_as_json = true
-      else
-        @event_send_as_json = false
-      end
-
-      @event_index = @index
-      @event_source = @source
     end
 
     def start
@@ -80,7 +52,7 @@ module Fluent
           when Fixnum
             event = record.to_s
           when Hash
-            if @event_send_as_json
+            if @send_event_as_json
               event = record.to_json
             else
               event = record.to_json.gsub("\"", %q(\\\"))
@@ -89,18 +61,16 @@ module Fluent
             event = record
           end
 
-          if @event_sourcetype == 'tag'
-            event_sourcetype = tag
-          end
+          sourcetype = @sourcetype == 'tag' ? tag : @sourcetype
 
           # Build body for the POST request
-          if @usejson == 'false'
+          if !@usejson
             event = record["time"]+ " " + record["message"].to_json.gsub(/^"|"$/,"")
-            body = '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + @event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
-          elsif @event_send_as_json
-            body = '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
+            body = '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
+          elsif @send_event_as_json
+            body = '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
           else
-            body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + event_sourcetype + '", "source" :"' + @event_source + '", "index" :"' + @event_index + '", "host" : "' + @event_host + '"}'
+            body = '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
           end
           log.debug "splunkhec: " + body + "\n"
           

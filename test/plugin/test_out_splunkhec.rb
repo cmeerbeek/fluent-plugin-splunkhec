@@ -36,7 +36,7 @@ class SplunkHECOutputTest < Test::Unit::TestCase
   end
 
   def test_should_require_mandatory_parameter_token
-    assert_raise RuntimeError do
+    assert_raise Fluent::ConfigError do
       create_driver_splunkhec(%[])
     end
   end
@@ -49,9 +49,9 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     assert_equal 'main', d.instance.index
     assert_equal `hostname`.delete!("\n"), d.instance.event_host
     assert_equal 'fluentd', d.instance.source
-    assert_equal nil, d.instance.sourcetype
-    assert_equal "false", d.instance.send_event_as_json
-    assert_equal "true", d.instance.usejson
+    assert_equal 'tag', d.instance.sourcetype
+    assert_equal false, d.instance.send_event_as_json
+    assert_equal true, d.instance.usejson
     assert_equal 'some_token', d.instance.token
   end
 
