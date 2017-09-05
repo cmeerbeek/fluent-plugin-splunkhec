@@ -54,49 +54,44 @@ module Fluent
 
     # Loop through all records and sent them to Splunk
     def write(chunk)
-      begin
-        body = ''
-        chunk.msgpack_each {|(tag,time,record)|
-          # Parse record to Splunk event format
-          case record
-          when Fixnum
-            event = record.to_s
-          when Hash
-            if @send_event_as_json
-              event = record.to_json
-            else
-              event = record.to_json.gsub("\"", %q(\\\"))
-            end
+      body = ''
+      chunk.msgpack_each {|(tag,time,record)|
+        # Parse record to Splunk event format
+        case record
+        when Fixnum
+          event = record.to_s
+        when Hash
+          if @send_event_as_json
+            event = record.to_json
           else
-            event = record
+            event = record.to_json.gsub("\"", %q(\\\"))
           end
+        else
+          event = record
+        end
 
-          sourcetype = @sourcetype == 'tag' ? tag : @sourcetype
+        sourcetype = @sourcetype == 'tag' ? tag : @sourcetype
 
-          # Build body for the POST request
-          if !@usejson
-            event = record["time"]+ " " + record["message"].to_json.gsub(/^"|"$/,"")
-            body << '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
-          elsif @send_event_as_json
-            body << '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
-          else
-            body << '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
-          end
-
-          if @send_batched_events
-            body << "\n"
-          else
-            send_to_splunk(body)
-            body = ''
-          end
-        }
+        # Build body for the POST request
+        if !@usejson
+          event = record["time"]+ " " + record["message"].to_json.gsub(/^"|"$/,"")
+          body << '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
+        elsif @send_event_as_json
+          body << '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
+        else
+          body << '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
+        end
 
         if @send_batched_events
+          body << "\n"
+        else
           send_to_splunk(body)
+          body = ''
         end
-      rescue => err
-        log.fatal("splunkhec: caught exception; exiting")
-        log.fatal(err)
+      }
+
+      if @send_batched_events
+        send_to_splunk(body)
       end
     end
 
@@ -126,8 +121,16 @@ module Fluent
       res = http.request(req)
       log.debug "splunkhec: response HTTP Status Code is #{res.code}"
       if res.code.to_i != 200
-        log.debug "splunkhec: response body is #{res.body}"
+        body = JSON.parse(res.body)
+        raise SplunkHECOutputError.new(body['text'], body['code'], body['invalid-event-number'], res.code)
       end
     end
   end
+
+  class SplunkHECOutputError < StandardError
+    def initialize(message, status_code, invalid_event_number, http_status_code)
+      super("#{message} (http status code #{http_status_code}, status code #{status_code}, invalid event number #{invalid_event_number})")
+    end
+  end
+
 end
