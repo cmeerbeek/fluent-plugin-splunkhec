@@ -14,7 +14,7 @@ module Fluent
 
     # Splunk event parameters
     config_param :index,               :string, :default => 'main'
-    config_param :event_host,          :string, :default => `hostname`.delete!("\n")
+    config_param :event_host,          :string, :default => nil
     config_param :source,              :string, :default => 'fluentd'
     config_param :sourcetype,          :string, :default => 'tag'
     config_param :send_event_as_json,  :bool,   :default => false
@@ -28,6 +28,14 @@ module Fluent
       super
       @splunk_url = @protocol + '://' + @host + ':' + @port + '/services/collector/event'
       log.debug 'splunkhec: sent data to ' + @splunk_url
+
+      if conf['event_host'] == nil
+        begin
+          @event_host = `hostname`.delete!("\n")
+        rescue
+          @event_host = 'unknown'
+        end
+      end
     end
 
     def start
