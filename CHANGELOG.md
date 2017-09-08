@@ -1,3 +1,10 @@
+## 1.2
+
+- Improved unit test coverage
+- Removed superfluous instance variables
+- Added feature send_batched_events
+- Rescue hosts that do not have hostname command installed.
+
 ## 1.1
 
 - Added send_event_as_json parameter to sent real json
