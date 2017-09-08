@@ -23,6 +23,7 @@ The Splunk HEC is running on a Heavy Forwarder or single instance. More info abo
     sourcetype data:type #optional
     usejson true #optional defaults to true
     send_event_as_json true #optional
+    send_batched_events false #optional
 </source>
 ```
 
@@ -66,6 +67,10 @@ Specify if an event should be sent as json rather than as a string. Can be 'true
 ## config: usejson
 
 Specify the event type as JSON (true|default) or raw (false) for sending Log4J messages so Splunk so it can parse the time field it self based on the format 'time' regex match found in the source, uses millisecond precision.
+
+## config: send_batched_events
+
+Specify that all events in a FluentD chunk should be sent in batch to Splunk. Defaults to 'false' which sends one event at a time. Batching events will reduce the load on the Splunk HEC. Max chunk size is controlled by config parameter 'buffer_chunk_limit' and should be matched by the Splunk limit 'max_content_length'. Please see this [blog post](https://www.splunk.com/blog/2016/08/12/handling-http-event-collector-hec-content-length-too-large-errors-without-pulling-your-hair-out.html) for details.
 
 ## Contributing
 
