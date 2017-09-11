@@ -1,3 +1,7 @@
+## 1.3
+
+In case of error in the connection exception is raised and fluent will retry.
+
 ## 1.2
 
 - Improved unit test coverage
