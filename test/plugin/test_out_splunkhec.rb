@@ -162,4 +162,15 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     assert_requested(splunk_request)
   end
 
+  def test_should_raise_exception_when_splunk_returns_error_to_make_fluentd_retry_later
+    stub_request(:any, SPLUNK_URL).to_return(status: 403, body: {'text' => 'Token disabled', 'code' => 1}.to_json)
+
+    assert_raise Fluent::SplunkHECOutputError do
+      d = create_driver_splunkhec
+      d.run do
+        d.emit({'message' => 'data'})
+      end
+    end
+  end
+
 end
