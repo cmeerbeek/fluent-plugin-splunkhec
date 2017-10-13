@@ -173,4 +173,17 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     end
   end
 
+  def test_should_handle_ascii_8bit_encoded_message_with_utf8_chars_correctly
+    record = {'message' => "\xC2\xA92017".b}
+
+    splunk_request = stub_request(:post, SPLUNK_URL).with(body: hash_including({'event' => {'message' => '©2017'}}))
+
+    d = create_driver_splunkhec(CONFIG + %[send_event_as_json true])
+    d.run do
+      d.emit(record)
+    end
+
+    assert_requested(splunk_request)
+  end
+
 end
