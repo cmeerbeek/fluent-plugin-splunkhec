@@ -1,3 +1,7 @@
+## 1.4
+
+Fixed undefined conversion error from ASCII-8BIT to UTF-8 by swapping json gem for yajl as used by fluentd
+
 ## 1.3
 
 In case of error in the connection exception is raised and fluent will retry.
