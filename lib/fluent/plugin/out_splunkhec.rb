@@ -1,6 +1,6 @@
 require 'fluent/output'
 require 'net/http'
-require 'json'
+require 'yajl/json_gem'
 
 module Fluent
   class SplunkHECOutput < BufferedOutput
