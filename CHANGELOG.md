@@ -1,3 +1,8 @@
+## 1.5
+
+- changed yajl dependency to yajl-ruby 1.3.0 or above
+- fixed typo in readme
+
 ## 1.4
 
 Fixed undefined conversion error from ASCII-8BIT to UTF-8 by swapping json gem for yajl as used by fluentd
