@@ -24,7 +24,7 @@ The Splunk HEC is running on a Heavy Forwarder or single instance. More info abo
     usejson true #optional defaults to true
     send_event_as_json true #optional
     send_batched_events false #optional
-</source>
+</match>
 ```
 
 ## config: host
