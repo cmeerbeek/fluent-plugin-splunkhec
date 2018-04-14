@@ -27,7 +27,7 @@ module Fluent
     def configure(conf)
       super
       @splunk_url = @protocol + '://' + @host + ':' + @port + '/services/collector/event'
-      log.debug 'splunkhec: sent data to ' + @splunk_url
+      log.info 'splunkhec: sent data to ' + @splunk_url
 
       if conf['event_host'] == nil
         begin
@@ -103,23 +103,23 @@ module Fluent
       # Create client
       http = Net::HTTP.new(uri.host, uri.port)
 
-      # Create Request
-      req = Net::HTTP::Post.new(uri)
-      # Add headers
-      req.add_field "Authorization", "Splunk #{@token}"
-      # Add headers
-      req.add_field "Content-Type", "application/json; charset=utf-8"
-      # Set body
+      # Create request
+      req = Net::HTTP::Post.new(uri, "Content-Type" => "application/json", "Authorization" => "Splunk #{@token}")
       req.body = body
+
       # Handle SSL
       if @protocol == 'https'
         http.use_ssl = true
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
 
-      # Fetch Request
-      res = http.request(req)
-      log.debug "splunkhec: response HTTP Status Code is #{res.code}"
+      # Send Request
+      res = Net::HTTP.start(uri.hostname, uri.port) do |http|
+        http.request(req)
+      end
+
+      log.debug "splunkhec: HTTP Response Status Code is #{res.code}"
+
       if res.code.to_i != 200
         body = JSON.parse(res.body)
         raise SplunkHECOutputError.new(body['text'], body['code'], body['invalid-event-number'], res.code)
