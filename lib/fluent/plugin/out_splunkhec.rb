@@ -15,8 +15,8 @@ module Fluent
     # Splunk event parameters
     config_param :index,               :string, :default => 'main'
     config_param :event_host,          :string, :default => nil
-    config_param :source,              :string, :default => 'fluentd'
-    config_param :sourcetype,          :string, :default => 'tag'
+    config_param :source,              :string, :default => 'tag'
+    config_param :sourcetype,          :string, :default => 'fluentd'
     config_param :send_event_as_json,  :bool,   :default => false
     config_param :usejson,             :bool,   :default => true
     config_param :send_batched_events, :bool,   :default => false
@@ -69,17 +69,17 @@ module Fluent
         else
           event = record
         end
-
-        sourcetype = @sourcetype == 'tag' ? tag : @sourcetype
+        
+        source = @source == 'tag' ? tag : @source
 
         # Build body for the POST request
         if !@usejson
           event = record["time"]+ " " + record["message"].to_json.gsub(/^"|"$/,"")
           body << '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
         elsif @send_event_as_json
-          body << '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
+          body << '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + sourcetype + '", "source" :"' + source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
         else
-          body << '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
+          body << '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
         end
 
         if @send_batched_events
