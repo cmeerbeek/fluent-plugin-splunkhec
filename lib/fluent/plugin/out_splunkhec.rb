@@ -15,8 +15,8 @@ module Fluent
     # Splunk event parameters
     config_param :index,               :string, :default => 'main'
     config_param :event_host,          :string, :default => nil
-    config_param :source,              :string, :default => 'fluentd'
-    config_param :sourcetype,          :string, :default => 'tag'
+    config_param :source,              :string, :default => 'tag'
+    config_param :sourcetype,          :string, :default => 'fluentd'
     config_param :send_event_as_json,  :bool,   :default => false
     config_param :usejson,             :bool,   :default => true
     config_param :send_batched_events, :bool,   :default => false
@@ -27,7 +27,7 @@ module Fluent
     def configure(conf)
       super
       @splunk_url = @protocol + '://' + @host + ':' + @port + '/services/collector/event'
-      log.debug 'splunkhec: sent data to ' + @splunk_url
+      log.info 'splunkhec: sent data to ' + @splunk_url
 
       if conf['event_host'] == nil
         begin
@@ -69,17 +69,17 @@ module Fluent
         else
           event = record
         end
-
-        sourcetype = @sourcetype == 'tag' ? tag : @sourcetype
+        
+        source = @source == 'tag' ? tag : @source
 
         # Build body for the POST request
         if !@usejson
           event = record["time"]+ " " + record["message"].to_json.gsub(/^"|"$/,"")
           body << '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
         elsif @send_event_as_json
-          body << '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
+          body << '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + sourcetype + '", "source" :"' + source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
         else
-          body << '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
+          body << '{"time" :' + time.to_s + ', "event" :"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + source + '", "index" :"' + @index + '", "host" : "' + @event_host + '"}'
         end
 
         if @send_batched_events
@@ -103,23 +103,23 @@ module Fluent
       # Create client
       http = Net::HTTP.new(uri.host, uri.port)
 
-      # Create Request
-      req = Net::HTTP::Post.new(uri)
-      # Add headers
-      req.add_field "Authorization", "Splunk #{@token}"
-      # Add headers
-      req.add_field "Content-Type", "application/json; charset=utf-8"
-      # Set body
+      # Create request
+      req = Net::HTTP::Post.new(uri, "Content-Type" => "application/json", "Authorization" => "Splunk #{@token}")
       req.body = body
+
       # Handle SSL
       if @protocol == 'https'
         http.use_ssl = true
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
 
-      # Fetch Request
-      res = http.request(req)
-      log.debug "splunkhec: response HTTP Status Code is #{res.code}"
+      # Send Request
+      res = Net::HTTP.start(uri.hostname, uri.port) do |http|
+        http.request(req)
+      end
+
+      log.debug "splunkhec: HTTP Response Status Code is #{res.code}"
+
       if res.code.to_i != 200
         body = JSON.parse(res.body)
         raise SplunkHECOutputError.new(body['text'], body['code'], body['invalid-event-number'], res.code)
