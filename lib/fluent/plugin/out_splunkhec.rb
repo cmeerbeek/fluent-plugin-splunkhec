@@ -58,7 +58,7 @@ module Fluent
       chunk.msgpack_each {|(tag,time,record)|
         # Parse record to Splunk event format
         case record
-        when Fixnum
+        when Integer
           event = record.to_s
         when Hash
           if @send_event_as_json
@@ -69,7 +69,7 @@ module Fluent
         else
           event = record
         end
-        
+
         source = @source == 'tag' ? tag : @source
 
         # Build body for the POST request
@@ -104,19 +104,16 @@ module Fluent
       http = Net::HTTP.new(uri.host, uri.port)
 
       # Create request
-      req = Net::HTTP::Post.new(uri, "Content-Type" => "application/json", "Authorization" => "Splunk #{@token}")
+      req = Net::HTTP::Post.new(uri, "Content-Type" => "application/json; charset=utf-8", "Authorization" => "Splunk #{@token}")
       req.body = body
 
       # Handle SSL
       if @protocol == 'https'
         http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
 
       # Send Request
-      res = Net::HTTP.start(uri.hostname, uri.port) do |http|
-        http.request(req)
-      end
+      res = http.request(req)
 
       log.debug "splunkhec: HTTP Response Status Code is #{res.code}"
 

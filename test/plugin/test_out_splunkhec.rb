@@ -48,8 +48,8 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     assert_equal '8088', d.instance.port
     assert_equal 'main', d.instance.index
     assert_equal `hostname`.delete!("\n"), d.instance.event_host
-    assert_equal 'fluentd', d.instance.source
-    assert_equal 'tag', d.instance.sourcetype
+    assert_equal 'fluentd', d.instance.sourcetype
+    assert_equal 'tag', d.instance.source
     assert_equal false, d.instance.send_event_as_json
     assert_equal true, d.instance.usejson
     assert_equal false, d.instance.send_batched_events
@@ -73,7 +73,7 @@ class SplunkHECOutputTest < Test::Unit::TestCase
                          .with(
                              headers: {
                                  'Authorization' => "Splunk #{TOKEN}",
-                                 'Content-Type' => 'application/json; charset=utf-8'
+                                 'Content-Type' => 'application/json; charset=utf-8',
                              },
                              body: {
                                  'time' => time,
@@ -95,7 +95,7 @@ class SplunkHECOutputTest < Test::Unit::TestCase
   def test_should_use_tag_as_sourcetype_when_configured
     splunk_request = stub_request(:post, SPLUNK_URL).with(body: hash_including({'sourcetype' => 'test'}))
 
-    d = create_driver_splunkhec(CONFIG + %[sourcetype tag])
+    d = create_driver_splunkhec(CONFIG + %[sourcetype test])
     d.run do
       d.emit({'message' => 'data'}, 123456)
     end
