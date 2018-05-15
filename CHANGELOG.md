@@ -1,3 +1,14 @@
+## 1.7
+
+- Fixed HTTP request (removed verify none)
+- udpated testscript
+- implemented travis.yml
+
+## 1.6
+
+- changed tag from sourcetype to source
+- improved ruby net HTTP implementation
+
 ## 1.5
 
 - changed yajl dependency to yajl-ruby 1.3.0 or above
