@@ -86,4 +86,4 @@ Specify that all events in a FluentD chunk should be sent in batch to Splunk. De
  
 ## Copyright
 
-Copyright (c) 2017 Coen Meerbeek. See [LICENSE](LICENSE) for details.
+Copyright (c) 2018 Coen Meerbeek. See [LICENSE](LICENSE) for details.

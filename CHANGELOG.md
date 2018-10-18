@@ -1,3 +1,11 @@
+## 1.9
+
+Reverted source and sourcetpye settings. They now reflect the README.
+
+## 1.8
+
+- Add expand function used in ES plugin an get variables from kubernetes tags in fluent.conf
+
 ## 1.7
 
 - Fixed HTTP request (removed verify none)
