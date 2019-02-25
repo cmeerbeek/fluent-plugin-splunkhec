@@ -1,10 +1,14 @@
-require 'fluent/output'
+require 'fluent/plugin/output'
 require 'net/http'
 require 'yajl/json_gem'
 
-module Fluent
-  class SplunkHECOutput < BufferedOutput
+module Fluent::Plugin
+  class SplunkHECOutput < Output
     Fluent::Plugin.register_output('splunkhec', self)
+
+    helpers :compat_parameters, :event_emitter
+
+    DEFAULT_BUFFER_TYPE = "memory"
 
     # Primary Splunk HEC configuration parameters
     config_param :host,     :string, :default => 'localhost'
@@ -21,10 +25,15 @@ module Fluent
     config_param :usejson,             :bool,   :default => true
     config_param :send_batched_events, :bool,   :default => false
 
+    config_section :buffer do
+      config_set_default :@type, DEFAULT_BUFFER_TYPE
+    end
+
     # This method is called before starting.
     # Here we construct the Splunk HEC URL to POST data to
     # If the configuration is invalid, raise Fluent::ConfigError.
     def configure(conf)
+      compat_parameters_convert(conf, :buffer)
       super
       @splunk_url = @protocol + '://' + @host + ':' + @port + '/services/collector/event'
       log.info 'splunkhec: sending data to ' + @splunk_url
@@ -36,6 +45,7 @@ module Fluent
           @event_host = 'unknown'
         end
       end
+      @packer = Fluent::Engine.msgpack_factory.packer
     end
 
     def start
@@ -46,10 +56,18 @@ module Fluent
       super
     end
 
+    def formatted_to_msgpack_binary?
+      true
+    end
+
+    def multi_workers_ready?
+      true
+    end
+
     # This method is called when an event reaches to Fluentd.
     # Use msgpack to serialize the object.
     def format(tag, time, record)
-      [tag, time, record].to_msgpack
+      @packer.pack([tag, time, record]).to_s
     end
 
     def expand_param(param, tag, time, record)
@@ -98,7 +116,7 @@ module Fluent
         end
         log.debug "routing event from #{event_host} to #{index} index"
         log.debug "expanded token #{token}"
-        
+
         # Parse record to Splunk event format
         case record
         when Integer

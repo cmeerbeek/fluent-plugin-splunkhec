@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'helper'
 require 'webmock/test_unit'
 
@@ -26,7 +27,7 @@ class SplunkHECOutputTest < Test::Unit::TestCase
   ]
 
   def create_driver_splunkhec(conf = CONFIG)
-    Fluent::Test::BufferedOutputTestDriver.new(Fluent::SplunkHECOutput).configure(conf)
+    Fluent::Test::Driver::Output.new(Fluent::Plugin::SplunkHECOutput).configure(conf)
   end
 
   def setup
@@ -48,8 +49,8 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     assert_equal '8088', d.instance.port
     assert_equal 'main', d.instance.index
     assert_equal `hostname`.delete!("\n"), d.instance.event_host
-    assert_equal 'fluentd', d.instance.sourcetype
-    assert_equal 'tag', d.instance.source
+    assert_equal 'tag', d.instance.sourcetype
+    assert_equal 'fluentd', d.instance.source
     assert_equal false, d.instance.send_event_as_json
     assert_equal true, d.instance.usejson
     assert_equal false, d.instance.send_batched_events
@@ -85,8 +86,8 @@ class SplunkHECOutputTest < Test::Unit::TestCase
                              })
 
     d = create_driver_splunkhec(CONFIG + %[sourcetype #{sourcetype}])
-    d.run do
-      d.emit(record, time)
+    d.run(default_tag: 'test')  do
+      d.feed(time, record)
     end
 
     assert_requested(splunk_request)
@@ -96,8 +97,8 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     splunk_request = stub_request(:post, SPLUNK_URL).with(body: hash_including({'sourcetype' => 'test'}))
 
     d = create_driver_splunkhec(CONFIG + %[sourcetype test])
-    d.run do
-      d.emit({'message' => 'data'}, 123456)
+    d.run(default_tag: 'test') do
+      d.feed(123456, {'message' => 'data'})
     end
 
     assert_requested(splunk_request)
@@ -108,8 +109,8 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     splunk_request = stub_request(:post, SPLUNK_URL).with(body: hash_including({'event' => record.to_json}))
 
     d = create_driver_splunkhec(CONFIG + %[send_event_as_json false])
-    d.run do
-      d.emit(record)
+    d.run(default_tag: 'test') do
+      d.feed(record)
     end
 
     assert_requested(splunk_request)
@@ -124,8 +125,8 @@ class SplunkHECOutputTest < Test::Unit::TestCase
                          .with(body: hash_including({'time' => log_time_millis, 'event' => "#{log_time} #{log_event}"}))
 
     d = create_driver_splunkhec(CONFIG + %[usejson false])
-    d.run do
-      d.emit({'time' => log_time, 'message' => log_event})
+    d.run(default_tag: 'test') do
+      d.feed({'time' => log_time, 'message' => log_event})
     end
 
     assert_requested(splunk_request)
@@ -137,8 +138,8 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     splunk_request = stub_request(:post, SPLUNK_URL).with(body: hash_including({'event' => record}))
 
     d = create_driver_splunkhec(CONFIG + %[send_event_as_json true])
-    d.run do
-      d.emit(record)
+    d.run(default_tag: 'test') do
+      d.feed(record)
     end
 
     assert_requested(splunk_request)
@@ -154,9 +155,9 @@ class SplunkHECOutputTest < Test::Unit::TestCase
       send_event_as_json true
       send_batched_events true])
 
-    d.run do
-      d.emit(record1)
-      d.emit(record2)
+    d.run(default_tag: 'test') do
+      d.feed(record1)
+      d.feed(record2)
     end
 
     assert_requested(splunk_request)
@@ -165,10 +166,10 @@ class SplunkHECOutputTest < Test::Unit::TestCase
   def test_should_raise_exception_when_splunk_returns_error_to_make_fluentd_retry_later
     stub_request(:any, SPLUNK_URL).to_return(status: 403, body: {'text' => 'Token disabled', 'code' => 1}.to_json)
 
-    assert_raise Fluent::SplunkHECOutputError do
+    assert_raise Fluent::Plugin::SplunkHECOutputError do
       d = create_driver_splunkhec
-      d.run do
-        d.emit({'message' => 'data'})
+      d.run(default_tag: 'test') do
+        d.feed({'message' => 'data'})
       end
     end
   end
@@ -179,8 +180,8 @@ class SplunkHECOutputTest < Test::Unit::TestCase
     splunk_request = stub_request(:post, SPLUNK_URL).with(body: hash_including({'event' => {'message' => '©2017'}}))
 
     d = create_driver_splunkhec(CONFIG + %[send_event_as_json true])
-    d.run do
-      d.emit(record)
+    d.run(default_tag: 'test') do
+      d.feed(record)
     end
 
     assert_requested(splunk_request)
