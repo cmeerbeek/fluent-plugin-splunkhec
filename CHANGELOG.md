@@ -1,3 +1,7 @@
+## 2.0
+
+Migrate to use FluentD v1 API. It doesn't support backwards compatibility.
+
 ## 1.9
 
 Reverted source and sourcetpye settings. They now reflect the README.
