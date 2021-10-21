@@ -1,6 +1,6 @@
 require 'fluent/plugin/output'
 require 'net/http'
-require 'yajl/json_gem'
+require 'yajl'
 
 module Fluent::Plugin
   class SplunkHECOutput < Output
@@ -123,9 +123,9 @@ module Fluent::Plugin
           event = record.to_s
         when Hash
           if @send_event_as_json
-            event = record.to_json
+            event = Yajl::Encoder.encode(record)
           else
-            event = record.to_json.gsub("\"", %q(\\\"))
+            event = Yajl::Encoder.encode(record).gsub("\"", %q(\\\"))
           end
         else
           event = record
@@ -135,7 +135,7 @@ module Fluent::Plugin
 
         # Build body for the POST request
         if !@usejson
-          event = record["time"]+ " " + record["message"].to_json.gsub(/^"|"$/,"")
+          event = record["time"]+ " " + Yajl::Encoder.encode(record["message"]).gsub(/^"|"$/,"")
           body << '{"time":"'+ DateTime.parse(record["time"]).strftime("%Q") +'", "event":"' + event + '", "sourcetype" :"' + sourcetype + '", "source" :"' + @source + '", "index" :"' + index + '", "host" : "' + event_host + '"}'
         elsif @send_event_as_json
           body << '{"time" :' + time.to_s + ', "event" :' + event + ', "sourcetype" :"' + sourcetype + '", "source" :"' + source + '", "index" :"' + index + '", "host" : "' + event_host + '"}'
@@ -180,7 +180,7 @@ module Fluent::Plugin
       log.debug "splunkhec: HTTP Response Status Code is #{res.code}"
 
       if res.code.to_i != 200
-        body = JSON.parse(res.body)
+        body = Yajl::Parser.parse(res.body)
         raise SplunkHECOutputError.new(body['text'], body['code'], body['invalid-event-number'], res.code)
       end
     end
