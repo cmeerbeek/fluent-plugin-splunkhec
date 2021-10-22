@@ -1,3 +1,7 @@
+## 2.1
+
+Replaced yajl/json_ge for regular yajl
+
 ## 2.0
 
 Migrate to use FluentD v1 API. It doesn't support backwards compatibility.
