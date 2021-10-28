@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |gem|
   gem.name          = "fluent-plugin-splunkhec"
-  gem.version       = "2.1"
+  gem.version       = "2.2"
   gem.authors       = "Coen Meerbeek"
   gem.email         = "cmeerbeek@gmail.com"
   gem.description   = %q{Output plugin for the Splunk HTTP Event Collector.}

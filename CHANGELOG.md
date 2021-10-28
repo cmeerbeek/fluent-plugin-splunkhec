@@ -1,3 +1,7 @@
+## 2.2
+
+Replaced deprecated packet statement
+
 ## 2.1
 
 Replaced yajl/json_ge for regular yajl
