@@ -45,7 +45,7 @@ module Fluent::Plugin
           @event_host = 'unknown'
         end
       end
-      @packer = Fluent::Engine.msgpack_factory.packer
+      @packer = Fluent::MessagePackFactory.engine_factory.packer
     end
 
     def start
