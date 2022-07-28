@@ -1,3 +1,7 @@
+## 2.3
+
+Updated dependencies to solve security issues
+
 ## 2.2
 
 Replaced deprecated packet statement

@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |gem|
   gem.name          = "fluent-plugin-splunkhec"
-  gem.version       = "2.2"
+  gem.version       = "2.3"
   gem.authors       = "Coen Meerbeek"
   gem.email         = "cmeerbeek@gmail.com"
   gem.description   = %q{Output plugin for the Splunk HTTP Event Collector.}
@@ -16,10 +16,10 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
-  gem.add_dependency "fluentd", [">= 1.9.0", "< 2"]
-  gem.add_dependency "yajl-ruby", '>= 1.4.0'
-  gem.add_development_dependency "rake", '>= 13.0.0'
-  gem.add_development_dependency "test-unit", '~> 3.4', '>= 3.4.0'
-  gem.add_development_dependency "webmock", '>= 3.8.0'
+  gem.add_dependency "fluentd", [">= 1.15.1", "< 2"]
+  gem.add_dependency "yajl-ruby", '>= 1.4.3'
+  gem.add_development_dependency "rake", '>= 13.0.6'
+  gem.add_development_dependency "test-unit", '~> 3.5', '>= 3.5.3'
+  gem.add_development_dependency "webmock", '>= 3.14.0'
   gem.license = 'MIT'
 end
